@@ -9,22 +9,19 @@ require 'tweetstream'
 CONFIG_FILEPATH = File.join(File.dirname(__FILE__), 'config.yml')
 
 def config
-  @conf ||= OpenStruct.new(YAML.load_file(CONFIG_FILEPATH))
+  @config ||= OpenStruct.new(YAML.load_file(CONFIG_FILEPATH))
 end
 
-TweetStream.configure do |c|
-  c.consumer_key       = config.consumer_key
-  c.consumer_secret    = config.consumer_secret
-  c.oauth_token        = config.oauth_token
-  c.oauth_token_secret = config.oauth_token_secret
+def configure
+  -> {|c|
+    c.consumer_key       = config.consumer_key
+    c.consumer_secret    = config.consumer_secret
+    c.oauth_token        = config.oauth_token
+    c.oauth_token_secret = config.oauth_token_secret
+  }
 end
 
-Twitter.configure do |c|
-  c.consumer_key       = config.consumer_key
-  c.consumer_secret    = config.consumer_secret
-  c.oauth_token        = config.oauth_token
-  c.oauth_token_secret = config.oauth_token_secret
-end
+[TweetStream, Twitter].each {|klass| klass.configure(&configure) }
 
 daemon = TweetStream::Daemon.new('hagonchu', log_output: true)
 
